@@ -5,20 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>影像製作管理</title>
-<style>
-  html, body { margin: 0; height: 100%; background: #f5f7f2; }
-  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
-  p { position: fixed; left: 0; right: 0; bottom: 8px; margin: 0; text-align: center; font: 12px/1.4 sans-serif; color: #8a9382; z-index: -1; }
-</style>
+<style>html,body{margin:0;height:100%;background:#f5f7f2;font:14px/1.6 sans-serif;color:#8a9382}#msg{position:fixed;inset:0;display:grid;place-items:center}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}</style>
 </head>
 <body>
-<p>載入中… 如果一直沒有畫面，<a id="direct" href="#">請點這裡直接開啟</a></p>
-<iframe id="app" title="影像製作管理" allow="clipboard-read; clipboard-write"></iframe>
+<div id="msg">載入中…</div>
 <script>
-  /* 系統的正式網址：之後如果重新建立部署而換了網址，只要改這一行 */
-  var APP = 'https://script.google.com/macros/s/AKfycbxxAsRfBmOXJWfV-J1q83dqs1U-S0RQ9L4aos3s_B1uuaF9T3Ng0apq7zXHJN5BAnV4/exec';
-  document.getElementById('app').src = APP;
-  document.getElementById('direct').href = APP;
+/* 系統的正式網址：之後如果重新建立部署而換了網址，只要改這一行 */
+var API = 'https://script.google.com/macros/s/AKfycbxxAsRfBmOXJWfV-J1q83dqs1U-S0RQ9L4aos3s_B1uuaF9T3Ng0apq7zXHJN5BAnV4/exec';
+/* 直接向後台取網頁原始碼，不經過 Google 的登入狀態，所以瀏覽器同時登入多個 Google 帳號也能用。
+   後台還沒更新到支援這個方式時，退回用內嵌框開啟。 */
+function fallback(){ document.getElementById('msg').innerHTML = ''; var f = document.createElement('iframe'); f.src = API; document.body.appendChild(f); }
+fetch(API + '?raw=1', { credentials: 'omit', redirect: 'follow' })
+  .then(function(r){ return r.text(); })
+  .then(function(h){
+    if (h.indexOf('id="loading"') < 0 || h.indexOf('影像製作管理') < 0) return fallback();
+    window.PM_API = API;
+    h = h.replace('<head>', '<head><script>window.PM_API=' + JSON.stringify(API) + ';<\/script>');
+    document.open(); document.write(h); document.close();
+  })
+  .catch(fallback);
 </script>
 </body>
 </html>
